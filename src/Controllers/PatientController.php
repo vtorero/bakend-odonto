@@ -229,6 +229,7 @@ class PatientController
             //$data['notes'] ?? null,
             $data['responsibleDoctor'] ?? null,
             $id
+
         ]);
 
         $data['id'] = "pat-{$id}";
