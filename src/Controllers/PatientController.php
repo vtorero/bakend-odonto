@@ -28,6 +28,7 @@ class PatientController
         $sql = "
                  SELECT p.*,
                    d.id AS responsibleDoctor,
+                   CONCAT(d.first_name,' ',d.last_name) AS  responsibleDrName,
                    (SELECT COUNT(*) FROM appointments a WHERE a.patient_id = p.id AND a.status IN ('scheduled', 'confirmed')) AS pendingAppointmentsCount
             FROM patients p LEFT JOIN doctors d ON p.responsible_doctor_id = d.id";
 
@@ -65,6 +66,7 @@ class PatientController
         $stmt = $this->db->prepare("
             SELECT p.*,
                    d.id as responsibleDoctor,
+                   CONCAT(d.first_name,' ',d.last_name)  as responsibleDrName,
                    d.license_number AS doctorLicense
             FROM patients p
             LEFT JOIN doctors d ON p.responsible_doctor_id = d.id
@@ -190,13 +192,14 @@ class PatientController
         $id = (int)str_replace('pat-', '', $args['id']);
         $data = json_decode((string)$request->getBody(), true);
 
+
+
         $stmt = $this->db->prepare("
             UPDATE patients SET
                 first_name = ?, last_name = ?, id_number = ?, birth_date = ?,
                 gender = ?, phone = ?, email = ?, address = ?, occupation = ?,
-                blood_type = ?,allergies = ?, medicalhistory = ?, medical_conditions = ?, current_medications = ?,
-                emergency_contact_name = ?, emergency_contact_phone = ?,
-                anamnesis_json = ?, stomatological_exam_json = ?, diagnosis_json = ?, treatment_plan_summary_json = ?,
+                blood_type = ?,allergies = ?, medicalhistory = ?, anamnesis_json = ?, medical_conditions = ?, current_medications = ?, emergency_contact_name = ?, emergency_contact_phone = ?,
+                 stomatological_exam_json = ?, diagnosis_json = ?, treatment_plan_summary_json = ?,
                 notes = ?, responsible_doctor_id = ?
             WHERE id = ?
         ");
@@ -214,6 +217,7 @@ class PatientController
             $data['bloodType'] ?? null,
             $data['allergies'] ?? null,
             isset($data['medicalhistory']) ? json_encode($data['medicalhistory'], JSON_UNESCAPED_UNICODE) : null,
+            isset($data['interceptiveAnamnesis']) ? json_encode($data['interceptiveAnamnesis'], JSON_UNESCAPED_UNICODE): null,
             $data['medicalConditions'] ?? null,
             $data['currentMedications'] ?? null,
             $data['emergencyContactName'] ?? null,
@@ -222,7 +226,7 @@ class PatientController
             isset($data['stomatologicalExam']) ? json_encode($data['stomatologicalExam'], JSON_UNESCAPED_UNICODE) : null,
             isset($data['diagnosis']) ? json_encode($data['diagnosis'], JSON_UNESCAPED_UNICODE) : null,
             isset($data['treatmentPlanSummary']) ? json_encode($data['treatmentPlanSummary'], JSON_UNESCAPED_UNICODE) : null,
-            $data['notes'] ?? null,
+            //$data['notes'] ?? null,
             $data['responsibleDoctor'] ?? null,
             $id
         ]);
@@ -260,11 +264,13 @@ class PatientController
             'bloodType' => $p['blood_type'] ?? '',
             'allergies' => $p['allergies'] ?? '',
             'medicalhistory' => !empty($p['medicalhistory']) ? json_decode($p['medicalhistory'], true) : null,
+            'interceptiveAnamnesis'=>!empty($p['anamnesis_json']) ? json_decode($p['medicalhistory'], true) : null,
             'medicalConditions' => $p['medical_conditions'] ?? '',
             'currentMedications' => $p['current_medications'] ?? '',
             'emergencyContactName' => $p['emergency_contact_name'] ?? '',
             'emergencyContactPhone' => $p['emergency_contact_phone'] ?? '',
-            'responsibleDoctor' => $p['responsibleDoctor'] ?? 'Dr. Carlos Mendoza',
+            'responsibleDoctor' => $p['responsibleDoctor'] ?? '',
+            'responsibleDrName' => $p['responsibleDrName'] ?? '',
             'notes' => $p['notes'] ?? '',
             'anamnesis' => !empty($p['anamnesis_json']) ? json_decode($p['anamnesis_json'], true) : null,
             'stomatologicalExam' => !empty($p['stomatological_exam_json']) ? json_decode($p['stomatological_exam_json'], true) : null,
